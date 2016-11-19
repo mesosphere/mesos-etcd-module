@@ -35,11 +35,12 @@ AC_ARG_WITH([mesos_build_dir],
             [mesos_build_dir=no])
 
 if test -d "$mesos"; then
-  MESOS_CPPFLAGS="-I${mesos}/include"
-  if test -d "${mesos}/lib"; then
-    MESOS_LDFLAGS="-L${mesos}/lib -lmesos"
-  else
+  if test -d "${mesos}/lib64"; then
+    MESOS_CPPFLAGS="-I${mesos}/include -I${mesos}/lib64/mesos/3rdparty/include"
     MESOS_LDFLAGS="-L${mesos}/lib64 -lmesos"
+  else
+    MESOS_CPPFLAGS="-I${mesos}/include -I${mesos}/lib/mesos/3rdparty/lib64"
+    MESOS_LDFLAGS="-L${mesos}/lib -lmesos"
   fi
 else
 
@@ -144,6 +145,12 @@ fi
 # CXXFLAG as appropriate.
 AX_CXX_COMPILE_STDCXX_11([noext], [mandatory])
 
+old_CPPFLAGS=${CPPFLAGS}
+CPPFLAGS="${CPPFLAGS} ${MESOS_CPPFLAGS}"
+
+old_LDFLAGS=${LDFLAGS}
+LDFLAGS="${LDFLAGS} ${MESOS_LDFLAGS}"
+
 # Check if headers and library were located.
 AC_CHECK_HEADER([glog/logging.h],
                 [AC_LINK_IFELSE(
@@ -166,5 +173,8 @@ AC_CHECK_HEADER([google/protobuf/message.h],
 AC_CHECK_HEADERS([boost/lexical_cast.hpp boost/functional/hash.hpp],
                 [],
                 [AC_MSG_ERROR([boost is not installed.])])
+
+LDFLAGS=${old_LDFLAGS}
+CPPFLAGS=${old_CPPFLAGS}
 
 AC_OUTPUT
